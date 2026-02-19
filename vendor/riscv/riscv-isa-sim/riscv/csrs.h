@@ -26,6 +26,10 @@ class csr_t : public openhw::reg {
   // Throw exception if read/write disallowed.
   virtual void verify_permissions(insn_t insn, bool write) const;
 
+  // Cosim
+  void disable(bool val) noexcept;
+  bool is_disabled() const noexcept;
+
   virtual ~csr_t();
 
  protected:
@@ -49,6 +53,9 @@ class csr_t : public openhw::reg {
  private:
   const unsigned csr_priv;
   const bool csr_read_only;
+
+  // Cosim
+  bool csr_disabled;
 
   // For access to written_value() and unlogged_write():
   friend class rv32_high_csr_t;

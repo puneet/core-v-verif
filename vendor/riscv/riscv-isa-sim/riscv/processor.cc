@@ -968,6 +968,16 @@ int processor_t::paddr_bits()
   return max_xlen == 64 ? 50 : 34;
 }
 
+// Cosim Specific
+void processor_t::disable_csr(int which, bool val)
+{
+  auto search = state.csrmap.find(which);
+  if (search != state.csrmap.end()) {
+    search->second->disable(val);
+    return;
+  }
+}
+
 void processor_t::put_csr(int which, reg_t val)
 {
   val = zext_xlen(val);

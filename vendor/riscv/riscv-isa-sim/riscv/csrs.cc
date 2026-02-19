@@ -25,10 +25,17 @@ csr_t::csr_t(processor_t* const proc, const reg_t addr):
   state(proc->get_state()),
   address(addr),
   csr_priv(get_field(addr, 0x300)),
-  csr_read_only(get_field(addr, 0xC00) == 3) {
+  csr_read_only(get_field(addr, 0xC00) == 3),
+  // Cosim
+  csr_disabled(false) {
 }
 
 void csr_t::verify_permissions(insn_t insn, bool write) const {
+  // Cosim
+  // if a csr is disabled, it should result in an illegal instruction trap
+  if (is_disabled())
+    throw trap_illegal_instruction(insn.bits());
+
   // Check permissions. Raise virtual-instruction exception if V=1,
   // privileges are insufficient, and the CSR belongs to supervisor or
   // hypervisor. Raise illegal-instruction exception otherwise.
@@ -48,6 +55,16 @@ void csr_t::verify_permissions(insn_t insn, bool write) const {
 }
 
 csr_t::~csr_t() {
+}
+
+// Cosim
+void csr_t::disable(bool val) noexcept {
+  csr_disabled = val;
+}
+
+// Cosim
+bool csr_t::is_disabled() const noexcept {
+  return csr_disabled;
 }
 
 void csr_t::log_write() const noexcept {
