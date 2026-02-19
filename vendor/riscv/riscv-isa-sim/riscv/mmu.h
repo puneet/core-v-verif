@@ -344,6 +344,9 @@ private:
   void check_triggers(triggers::operation_t operation, reg_t address, std::optional<reg_t> data = std::nullopt);
   reg_t translate(reg_t addr, reg_t len, access_type type, uint32_t xlate_flags);
 
+  // Cosim Specific
+  reg_t translate(reg_t addr, access_type type);
+
   reg_t pte_load(reg_t pte_paddr, reg_t addr, bool virt, access_type trap_type, size_t ptesize) {
     if (ptesize == 4)
       return pte_load<uint32_t>(pte_paddr, addr, virt, trap_type);

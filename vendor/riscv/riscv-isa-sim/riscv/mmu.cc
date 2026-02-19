@@ -52,6 +52,12 @@ void throw_access_exception(bool virt, reg_t addr, access_type type)
   }
 }
 
+// Cosim Specific
+reg_t mmu_t::translate(reg_t addr, access_type type)
+{
+  return translate(addr, 1, type, 0);
+}
+
 reg_t mmu_t::translate(reg_t addr, reg_t len, access_type type, uint32_t xlate_flags)
 {
   if (!proc)
