@@ -524,6 +524,10 @@ void state_t::reset(processor_t* const proc, reg_t max_isa)
 
   serialized = false;
 
+  // Cosim Specific
+  nmi = false;
+  nmi_int = false;
+
   log_reg_write.clear();
   log_mem_read.clear();
   log_mem_write.clear();
@@ -810,7 +814,13 @@ void processor_t::take_trap(trap_t& t, reg_t epc)
 
   // By default, trap to M-mode, unless delegated to HS-mode or VS-mode
   reg_t vsdeleg, hsdeleg;
-  reg_t bit = t.cause();
+
+  // Cosim Specific
+  // reg_t bit = t.cause();
+  reg_t bit = state.nmi_int ? ((reg_t)1 << (get_isa().get_max_xlen()-1)) | NMI_INTERRUPT_NUM :
+                              t.cause();
+  state.nmi_int = state.nmi_int ? false : state.nmi_int;
+
   bool curr_virt = state.v;
   bool interrupt = (bit & ((reg_t)1 << (max_xlen - 1))) != 0;
   if (interrupt) {

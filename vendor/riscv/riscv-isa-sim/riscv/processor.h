@@ -21,6 +21,9 @@
 
 #define N_HPMCOUNTERS 29
 
+// Cosim Specific
+#define NMI_INTERRUPT_NUM 31
+
 class processor_t;
 class mmu_t;
 typedef reg_t (*insn_func_t)(processor_t*, insn_t, reg_t);
@@ -169,6 +172,11 @@ struct state_t
       STEP_STEPPING,
       STEP_STEPPED
   } single_step;
+
+  // Cosim Specific
+  bool nmi;
+  bool nmi_int;
+  reg_t last_inst_pc;
 
   commit_log_reg_t log_reg_write;
   commit_log_mem_t log_mem_read;
@@ -334,7 +342,18 @@ protected:
   static const size_t OPCODE_CACHE_SIZE = 8191;
   insn_desc_t opcode_cache[OPCODE_CACHE_SIZE];
 
-  virtual void take_pending_interrupt() { take_interrupt(state.mip->read() & state.mie->read()); }
+  void take_pending_interrupt() {
+    if (!state.debug_mode && state.nmi) {
+      state.nmi = false;
+      throw trap_t(((reg_t)1 << (get_isa().get_max_xlen()-1)) | NMI_INTERRUPT_NUM);
+    }
+    if (!state.debug_mode && state.nmi_int) {
+      throw trap_t(((reg_t)1 << get_isa().get_max_xlen()) - 1 - NMI_INTERRUPT_NUM);
+    }
+
+    take_interrupt(state.mip->read() & state.mie->read());
+  }
+
   void take_interrupt(reg_t mask); // take first enabled interrupt in mask
   virtual void take_trap(trap_t& t, reg_t epc); // take an exception
   void take_trigger_action(triggers::action_t action, reg_t breakpoint_tval, reg_t epc);

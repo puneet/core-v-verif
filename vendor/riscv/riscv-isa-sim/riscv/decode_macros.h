@@ -211,6 +211,10 @@ class wait_for_interrupt_t {};
 #define serialize() set_pc_and_serialize(npc)
 
 /* Sentinel PC values to serialize simulator pipeline */
+
+// Cosim Specific
+#define PC_INVALID 1
+
 #define PC_SERIALIZE_BEFORE 3
 #define PC_SERIALIZE_AFTER 5
 #define invalid_pc(pc) ((pc) & 1)

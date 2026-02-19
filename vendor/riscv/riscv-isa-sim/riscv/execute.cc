@@ -14,6 +14,11 @@ static void commit_log_reset(processor_t* p)
   p->get_state()->log_mem_write.clear();
 }
 
+static void commit_log_stash_pc(processor_t* p, reg_t pc)
+{
+  p->get_state()->last_inst_pc = pc;
+}
+
 static void commit_log_stash_privilege(processor_t* p)
 {
   state_t* state = p->get_state();
@@ -180,6 +185,9 @@ static inline reg_t execute_insn_logged(processor_t* p, reg_t pc, insn_fetch_t f
      }
   } catch (wait_for_interrupt_t &t) {
       if (p->get_log_commits_enabled()) {
+	// Cosim Specific
+        commit_log_stash_pc(p, pc);
+
         commit_log_print_insn(p, pc, fetch.insn);
       }
       throw;
@@ -197,6 +205,12 @@ static inline reg_t execute_insn_logged(processor_t* p, reg_t pc, insn_fetch_t f
   } catch(...) {
     throw;
   }
+
+  // Cosim Specific
+  if (npc != PC_SERIALIZE_BEFORE) {
+    commit_log_stash_pc(p, pc);
+  }
+  
   p->update_histogram(pc);
 
   return npc;
@@ -211,6 +225,9 @@ bool processor_t::slow_path()
 // fetch/decode/execute loop
 void processor_t::step(size_t n)
 {
+  // Cosim Specific
+  state.last_inst_pc = PC_INVALID;
+
   if (!state.debug_mode) {
     if (halt_request == HR_REGULAR) {
       enter_debug_mode(DCSR_CAUSE_DEBUGINT);
